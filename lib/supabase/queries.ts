@@ -86,14 +86,54 @@ export async function getLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
 }
 
 /**
+ * Fetch detailed stats for a user
+ */
+export async function getUserStats(userId: string) {
+  const { data: runs, error } = await supabase
+    .from('runs')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error fetching user stats:', error);
+    return null;
+  }
+
+  const totalPlayed = runs.length;
+  const wonRuns = runs.filter(r => r.won);
+  const totalWon = wonRuns.length;
+  const winRate = totalPlayed > 0 ? Math.round((totalWon / totalPlayed) * 100) : 0;
+  
+  const bestTime = wonRuns.length > 0 
+    ? Math.min(...wonRuns.map(r => r.duration)) 
+    : 0;
+
+  const totalHints = runs.reduce((acc, r) => acc + (r.hints_used || 0), 0);
+  
+  // Calculate mood distribution
+  const moodCounts: Record<string, number> = {};
+  runs.forEach(r => {
+    moodCounts[r.mood] = (moodCounts[r.mood] || 0) + 1;
+  });
+
+  return {
+    totalPlayed,
+    winRate,
+    bestTime,
+    totalHints,
+    moodCounts,
+    recentRuns: runs.slice(-5).reverse(),
+  };
+}
+
+/**
  * Update player statistics
  */
 export async function updatePlayerStats(userId: string, stats: PlayerStats) {
   const { error } = await supabase
     .from('users')
     .update({
-      // We could store complex stats as JSON or individual columns
-      // For now, let's assume we update a profile
+      // Archetype could be calculated or updated here
     })
     .eq('id', userId);
 

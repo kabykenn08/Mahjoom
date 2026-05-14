@@ -10,7 +10,7 @@ export const MOOD_THEMES: Record<MoodType, MoodTheme> = {
     id: 'focus',
     name: 'Focus',
     description: 'Clear mind. Sharp thinking. Zero distraction.',
-    icon: '🎯',
+    icon: 'Target',
     colors: {
       primary: '#3b82f6',
       secondary: '#1d4ed8',
@@ -38,7 +38,7 @@ export const MOOD_THEMES: Record<MoodType, MoodTheme> = {
     id: 'relax',
     name: 'Relax',
     description: 'Gentle pace. Warm light. Just breathe.',
-    icon: '🌊',
+    icon: 'Waves',
     colors: {
       primary: '#f59e0b',
       secondary: '#d97706',
@@ -66,7 +66,7 @@ export const MOOD_THEMES: Record<MoodType, MoodTheme> = {
     id: 'deep-work',
     name: 'Deep Work',
     description: 'Maximum flow state. No noise.',
-    icon: '⚡',
+    icon: 'Zap',
     colors: {
       primary: '#6366f1',
       secondary: '#4f46e5',
@@ -94,7 +94,7 @@ export const MOOD_THEMES: Record<MoodType, MoodTheme> = {
     id: 'anxiety-reset',
     name: 'Anxiety Reset',
     description: 'Slow down. Ground yourself. One tile at a time.',
-    icon: '🌿',
+    icon: 'Leaf',
     colors: {
       primary: '#10b981',
       secondary: '#059669',
@@ -122,7 +122,7 @@ export const MOOD_THEMES: Record<MoodType, MoodTheme> = {
     id: 'creative-flow',
     name: 'Creative Flow',
     description: 'Color. Energy. Playful brilliance.',
-    icon: '✨',
+    icon: 'Sparkles',
     colors: {
       primary: '#ec4899',
       secondary: '#db2777',
@@ -150,7 +150,7 @@ export const MOOD_THEMES: Record<MoodType, MoodTheme> = {
     id: 'night-wind-down',
     name: 'Night Wind-Down',
     description: 'Stars. Silence. The day becomes memory.',
-    icon: '🌙',
+    icon: 'Moon',
     colors: {
       primary: '#8b5cf6',
       secondary: '#7c3aed',

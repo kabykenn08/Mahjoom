@@ -15,6 +15,8 @@ import AmbientBackground from '@/components/effects/AmbientBackground';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import DynamicIcon from '@/components/ui/DynamicIcon';
+import { Globe, Calendar, Map, Crown, Medal } from 'lucide-react';
 
 function formatTime(s: number) {
   return `${Math.floor(s / 60)}m ${s % 60}s`;
@@ -74,33 +76,49 @@ export default function LeaderboardPage() {
             </p>
           </header>
 
-          <Tabs defaultValue="global" className="w-full">
-            <div className="flex justify-center mb-10">
-              <TabsList className="glass p-1 rounded-2xl h-12">
-                {['global', 'daily', 'country'].map((tab) => (
-                  <TabsTrigger key={tab} value={tab} className="px-8 rounded-xl capitalize text-sm font-bold data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all">
-                    {tab === 'global' ? '🌍 World' : tab === 'daily' ? '📅 Daily' : '🗺 My Region'}
+            <Tabs defaultValue="global" className="w-full">
+              <div className="flex justify-center mb-10">
+                <TabsList className="glass p-1 rounded-2xl h-12">
+                  <TabsTrigger value="global" className="px-8 rounded-xl capitalize text-sm font-bold flex items-center gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all">
+                    <Globe size={16} /> World
                   </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
+                  <TabsTrigger value="daily" className="px-8 rounded-xl capitalize text-sm font-bold flex items-center gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all">
+                    <Calendar size={16} /> Daily
+                  </TabsTrigger>
+                  <TabsTrigger value="country" className="px-8 rounded-xl capitalize text-sm font-bold flex items-center gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all">
+                    <Map size={16} /> My Region
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-            <TabsContent value="global" className="space-y-12">
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20">
-                  <div className="text-4xl animate-bounce mb-4">🀄</div>
-                  <p className="text-sm font-medium animate-pulse" style={{ color: theme.colors.textMuted }}>Reading the stars...</p>
+              {/* Permanent CTA - Moved outside TabsContent to persist across all tabs */}
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                className="glass rounded-[2rem] p-10 text-center relative overflow-hidden mb-12"
+                style={{ borderColor: `${theme.colors.primary}30` }}>
+                <div className="relative z-10">
+                  <h3 className="text-3xl font-bold mb-3" style={{ color: theme.colors.text }}>Ready to join them?</h3>
+                  <p className="text-sm mb-8 max-w-xs mx-auto" style={{ color: theme.colors.textMuted }}>Every match counts. Start your session and claim your place in the Hall of Zen.</p>
+                  <button onClick={() => router.push('/game')}
+                    className="px-10 py-4 rounded-2xl font-bold transition-all hover:scale-105 shadow-xl"
+                    style={{ background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`, color: '#fff' }}>
+                    Start New Game
+                  </button>
                 </div>
-              ) : (
-                <>
-                  {/* Podium */}
+              </motion.div>
+
+              <TabsContent value="global" className="space-y-12 outline-none">
+                {!isLoading && (
+                  <>
+                    {/* Podium */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end mb-16">
                     {/* Rank 2 */}
                     {podium[1] && (
                       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                         className="glass rounded-3xl p-6 text-center order-2 md:order-1 h-64 flex flex-col justify-center relative border-t-4"
                         style={{ borderColor: '#94a3b840' }}>
-                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-3xl">🥈</div>
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-3xl">
+                          <Medal size={32} style={{ color: '#94a3b8' }} />
+                        </div>
                         <Avatar className="w-16 h-16 mx-auto mb-4 border-2 border-slate-400/30">
                           <AvatarFallback style={{ background: '#94a3b820', color: '#94a3b8' }}>{podium[1].username.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
@@ -115,7 +133,9 @@ export default function LeaderboardPage() {
                       <motion.div initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: 0.1 }}
                         className="glass rounded-[2.5rem] p-8 text-center order-1 md:order-2 h-80 flex flex-col justify-center relative border-t-4 shadow-2xl"
                         style={{ borderColor: '#fbbf2460', boxShadow: `0 0 40px #fbbf2415` }}>
-                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-5xl">👑</div>
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2">
+                          <Crown size={48} style={{ color: '#fbbf24' }} fill="#fbbf2430" />
+                        </div>
                         <Avatar className="w-20 h-20 mx-auto mb-4 border-4 border-amber-400/40">
                           <AvatarFallback style={{ background: '#fbbf2420', color: '#fbbf24' }}>{podium[0].username.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
@@ -132,7 +152,9 @@ export default function LeaderboardPage() {
                       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
                         className="glass rounded-3xl p-6 text-center order-3 md:order-3 h-56 flex flex-col justify-center relative border-t-4"
                         style={{ borderColor: '#cd7c3f40' }}>
-                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-3xl">🥉</div>
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                          <Medal size={28} style={{ color: '#cd7c3f' }} />
+                        </div>
                         <Avatar className="w-14 h-14 mx-auto mb-4 border-2 border-orange-700/30">
                           <AvatarFallback style={{ background: '#cd7c3f20', color: '#cd7c3f' }}>{podium[2].username.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
@@ -168,20 +190,6 @@ export default function LeaderboardPage() {
                 </>
               )}
 
-              {/* Bottom CTA */}
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}
-                className="glass rounded-3xl p-10 text-center relative overflow-hidden"
-                style={{ borderColor: `${theme.colors.primary}30` }}>
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-bold mb-2" style={{ color: theme.colors.text }}>Ready to join them?</h3>
-                  <p className="text-sm mb-6 max-w-xs mx-auto" style={{ color: theme.colors.textMuted }}>Every match counts. Start your session and claim your place in the Hall of Zen.</p>
-                  <button onClick={() => router.push('/game')}
-                    className="px-10 py-4 rounded-2xl font-bold transition-all hover:scale-105"
-                    style={{ background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`, color: '#fff' }}>
-                    Start New Game
-                  </button>
-                </div>
-              </motion.div>
             </TabsContent>
           </Tabs>
         </motion.div>

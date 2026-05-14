@@ -7,7 +7,7 @@
 
 import { useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
 import { useMoodStore } from '@/store/moodStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,7 +27,7 @@ function GameContent() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const mode = searchParams.get('mode');
-  const { initGame, resetGame, board, status } = useGameStore();
+  const { initGame, resetGame, board, status, isPaused, resumeGame } = useGameStore();
   const { currentMood, theme } = useMoodStore();
 
   const startNewGame = useCallback(() => {
@@ -48,7 +48,7 @@ function GameContent() {
       return;
     }
 
-    if (isAuthenticated && (!board || status === 'idle')) {
+    if (isAuthenticated && (!board || status === 'idle' || status === 'won' || status === 'lost')) {
       startNewGame();
     }
   }, [authLoading, isAuthenticated, board, status, startNewGame, router]);
@@ -149,6 +149,58 @@ function GameContent() {
           <MoodMechanicsInfo />
         </motion.aside>
       </div>
+
+      {/* Pause Menu Overlay */}
+      <AnimatePresence>
+        {isPaused && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="glass rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl border-none"
+            >
+              <div className="w-20 h-20 rounded-3xl glass mx-auto mb-6 flex items-center justify-center text-4xl"
+                style={{ color: theme.colors.primary, borderColor: `${theme.colors.primary}40` }}>
+                ⏸
+              </div>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: theme.colors.text }}>Paused</h2>
+              <p className="text-sm mb-8" style={{ color: theme.colors.textMuted }}>Take a breath. The tiles will wait.</p>
+              
+              <div className="space-y-3">
+                <button 
+                  onClick={resumeGame}
+                  className="w-full py-4 rounded-2xl bg-white text-black font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl"
+                >
+                  Continue Journey
+                </button>
+                <button 
+                  onClick={() => useGameStore.getState().finishGame(false)}
+                  className="w-full py-4 rounded-2xl glass text-sm font-bold hover:bg-white/5 transition-all"
+                  style={{ color: theme.colors.accent }}
+                >
+                  End & Save Session
+                </button>
+                <button 
+                  onClick={() => {
+                    useGameStore.getState().resetGame();
+                    router.push('/');
+                  }}
+                  className="w-full py-2 text-[10px] uppercase tracking-widest font-black opacity-40 hover:opacity-100 transition-opacity mt-4"
+                  style={{ color: theme.colors.text }}
+                >
+                  Quit to Menu
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

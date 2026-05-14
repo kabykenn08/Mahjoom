@@ -145,6 +145,10 @@ export const useGameStore = create<GameStore>()(
       });
     },
 
+    finishGame: (won: boolean) => {
+      set({ status: won ? 'won' : 'lost', isPaused: false });
+    },
+
     reshuffle: () => {
       const { board } = get();
       if (!board) return;

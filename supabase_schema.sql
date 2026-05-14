@@ -31,13 +31,55 @@ create table if not exists public.leaderboard (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references public.users on delete cascade not null,
   score integer not null,
-  time integer not null, -- duration
+  time integer not null, -- duration in seconds
   country text,
   city text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 4. Daily Challenges Table
+-- 4. Function: Update Leaderboard on Win
+-- This is called whenever a new run is inserted
+create or replace function public.update_leaderboard_on_win()
+returns trigger as $$
+declare
+  user_country text;
+  user_city text;
+  current_best_score integer;
+begin
+  -- Only process won games
+  if new.won = true then
+    -- Get user location
+    select country, city into user_country, user_city from public.users where id = new.user_id;
+
+    -- Calculate score (example: base 10000 - time penalty + move bonus)
+    -- This can be adjusted to match your game's scoring logic
+    -- For now, let's assume score is passed or calculated here
+    -- Let's use a simple formula for the leaderboard: (Moves * 10) - (Duration)
+    -- Actually, let's just use the score if we add a score column to runs
+    
+    -- Check if user already has a better score
+    select max(score) into current_best_score from public.leaderboard where user_id = new.user_id;
+
+    if current_best_score is null or (new.moves * 50) > current_best_score then
+      -- Insert or update
+      insert into public.leaderboard (user_id, score, time, country, city)
+      values (new.user_id, (new.moves * 50), new.duration, user_country, user_city)
+      on conflict (id) do update set 
+        score = excluded.score,
+        time = excluded.time;
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+-- Trigger for leaderboard
+drop trigger if exists on_run_inserted on public.runs;
+create trigger on_run_inserted
+  after insert on public.runs
+  for each row execute procedure public.update_leaderboard_on_win();
+
+-- 5. Daily Challenges Table
 create table if not exists public.daily_challenges (
   id uuid default gen_random_uuid() primary key,
   date date unique not null,
@@ -46,33 +88,31 @@ create table if not exists public.daily_challenges (
   difficulty integer default 2
 );
 
--- 5. Enable RLS (Row Level Security)
+-- 6. Enable RLS
 alter table public.users enable row level security;
 alter table public.runs enable row level security;
 alter table public.leaderboard enable row level security;
 alter table public.daily_challenges enable row level security;
 
--- Policies
-create policy "Public profiles are viewable by everyone." on public.users
-  for select using (true);
+-- Policies (Safe re-run)
+do $$ 
+begin
+  drop policy if exists "Public profiles are viewable by everyone." on public.users;
+  drop policy if exists "Users can update their own profile." on public.users;
+  drop policy if exists "Runs are viewable by everyone." on public.runs;
+  drop policy if exists "Users can insert their own runs." on public.runs;
+  drop policy if exists "Leaderboard is viewable by everyone." on public.leaderboard;
+  drop policy if exists "Daily challenges are viewable by everyone." on public.daily_challenges;
+end $$;
 
-create policy "Users can update their own profile." on public.users
-  for update using (auth.uid() = id);
+create policy "Public profiles are viewable by everyone." on public.users for select using (true);
+create policy "Users can update their own profile." on public.users for update using (auth.uid() = id);
+create policy "Runs are viewable by everyone." on public.runs for select using (true);
+create policy "Users can insert their own runs." on public.runs for insert with check (auth.uid() = user_id or user_id is null);
+create policy "Leaderboard is viewable by everyone." on public.leaderboard for select using (true);
+create policy "Daily challenges are viewable by everyone." on public.daily_challenges for select using (true);
 
-create policy "Runs are viewable by everyone." on public.runs
-  for select using (true);
-
-create policy "Users can insert their own runs." on public.runs
-  for insert with check (auth.uid() = user_id or user_id is null);
-
-create policy "Leaderboard is viewable by everyone." on public.leaderboard
-  for select using (true);
-
-create policy "Daily challenges are viewable by everyone." on public.daily_challenges
-  for select using (true);
-
--- 6. Trigger: Automatically create a user profile on signup
--- This ensures that every new Auth user gets a row in public.users
+-- 7. Triggers for User Profiles
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -86,6 +126,7 @@ begin
 end;
 $$ language plpgsql security definer;
 
-create or replace trigger on_auth_user_created
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();

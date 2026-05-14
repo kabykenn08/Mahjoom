@@ -16,16 +16,8 @@ import { getMoodTheme } from '@/lib/moods';
 import AmbientBackground from '@/components/effects/AmbientBackground';
 import FloatingTiles from '@/components/effects/FloatingTiles';
 import HowToPlay from '@/components/game/HowToPlay';
-
-const MOOD_ICONS: Record<MoodType, string> = {
-
-  focus: '🎯',
-  relax: '🌊',
-  'deep-work': '⚡',
-  'anxiety-reset': '🌿',
-  'creative-flow': '✨',
-  'night-wind-down': '🌙',
-};
+import DynamicIcon from '@/components/ui/DynamicIcon';
+import { Brain, Palette, BarChart3, Trophy, Play } from 'lucide-react';
 
 const MOOD_NAMES: Record<MoodType, string> = {
   focus: 'Focus',
@@ -179,7 +171,7 @@ export default function LandingPage() {
                     id={`mood-btn-${mood}`}
                     aria-pressed={isActive}
                   >
-                    <span>{MOOD_ICONS[mood]}</span>
+                    <DynamicIcon name={theme.icon} size={18} />
                     <span>{MOOD_NAMES[mood]}</span>
                   </motion.button>
                 );
@@ -220,26 +212,6 @@ export default function LandingPage() {
           </div>
         </motion.div>
 
-        {/* Features Row */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="flex flex-wrap gap-8 justify-center mt-20"
-        >
-          {[
-            { icon: '🧠', label: 'AI Coach', desc: 'Strategic insights, not tips' },
-            { icon: '🎭', label: '6 Moods', desc: 'Adaptive atmosphere' },
-            { icon: '📊', label: 'Analytics', desc: 'Know your style' },
-            { icon: '🏆', label: 'Daily Boards', desc: 'One puzzle, global stage' },
-          ].map((f) => (
-            <div key={f.label} className="text-center" style={{ color: activeTheme.colors.textMuted }}>
-              <div className="text-2xl mb-1">{f.icon}</div>
-              <div className="text-sm font-medium" style={{ color: activeTheme.colors.text }}>{f.label}</div>
-              <div className="text-xs">{f.desc}</div>
-            </div>
-          ))}
-        </motion.div>
       </div>
     </main>
   );

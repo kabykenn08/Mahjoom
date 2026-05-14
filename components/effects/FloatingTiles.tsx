@@ -26,9 +26,13 @@ export default function FloatingTiles({ mood, count = 8 }: Props) {
     startX: `${(i * 13 + 5) % 90}%`,
     startY: `${(i * 17 + 10) % 80}%`,
     delay: i * 0.8,
-    duration: (8 + i * 1.5) / speed,
+    duration: (10 + i * 2) / Math.max(0.7, speed), // Ensure it's not too slow
     rotate: (i * 25) % 360,
   }));
+
+  // Increase baseline intensity for better visibility in all moods
+  const motionIntensity = Math.max(0.5, intensity);
+  const opacityIntensity = Math.max(0.6, intensity);
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
@@ -42,15 +46,15 @@ export default function FloatingTiles({ mood, count = 8 }: Props) {
             width: 44,
             height: 56,
             color: theme.colors.primary,
-            opacity: intensity * 0.5,
-            borderColor: `${theme.colors.primary}20`,
-            boxShadow: `0 0 10px ${theme.colors.tileGlow}`,
+            opacity: opacityIntensity * 0.3, // Baseline visibility
+            borderColor: `${theme.colors.primary}30`,
+            boxShadow: `0 0 15px ${theme.colors.tileGlow}`,
           }}
           animate={{
-            y: [0, -30 * intensity, 20 * intensity, 0],
-            x: [0, 15 * intensity, -10 * intensity, 0],
-            rotate: [tile.rotate, tile.rotate + 8, tile.rotate - 5, tile.rotate],
-            opacity: [intensity * 0.3, intensity * 0.6, intensity * 0.3],
+            y: [0, -40 * motionIntensity, 30 * motionIntensity, 0],
+            x: [0, 20 * motionIntensity, -15 * motionIntensity, 0],
+            rotate: [tile.rotate, tile.rotate + 12, tile.rotate - 8, tile.rotate],
+            opacity: [opacityIntensity * 0.2, opacityIntensity * 0.5, opacityIntensity * 0.2],
           }}
           transition={{
             duration: tile.duration,

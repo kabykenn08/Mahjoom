@@ -7,6 +7,7 @@
 
 import { motion } from 'framer-motion';
 import { useMoodStore } from '@/store/moodStore';
+import DynamicIcon from '@/components/ui/DynamicIcon';
 
 export default function MoodMechanicsInfo() {
   const { theme } = useMoodStore();
@@ -22,7 +23,7 @@ export default function MoodMechanicsInfo() {
   return (
     <div className="glass rounded-xl p-3 space-y-2 mt-4" style={{ borderColor: `${theme.colors.primary}20` }}>
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-lg">{theme.icon}</span>
+        <DynamicIcon name={theme.icon} size={18} style={{ color: theme.colors.primary }} />
         <span className="text-xs font-bold uppercase tracking-wider" style={{ color: theme.colors.text }}>
           {theme.name} Rules
         </span>

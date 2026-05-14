@@ -14,6 +14,7 @@ import { AIGameContext } from '@/types';
 import { supabase } from '@/lib/supabase/client';
 import { saveGameRun } from '@/lib/supabase/queries';
 import { getLayerDistribution } from '@/core/mahjong/rules';
+import { Timer, Target, Lightbulb, BarChart4 } from 'lucide-react';
 
 
 function formatTime(s: number) {
@@ -139,10 +140,10 @@ export default function ResultsOverlay({ onPlayAgain }: Props) {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-3 mb-8">
               {[
-                { label: 'Time', value: formatTime(elapsed), icon: '⏱' },
-                { label: 'Moves', value: moves.length, icon: '🎯' },
-                { label: 'Hints Used', value: hintsUsed, icon: '💡' },
-                { label: 'Efficiency', value: `${stats?.efficiency ?? 0}%`, icon: '📊' },
+                { label: 'Time', value: formatTime(elapsed), icon: <Timer size={20} /> },
+                { label: 'Moves', value: moves.length, icon: <Target size={20} /> },
+                { label: 'Hints Used', value: hintsUsed, icon: <Lightbulb size={20} /> },
+                { label: 'Efficiency', value: `${stats?.efficiency ?? 0}%`, icon: <BarChart4 size={20} /> },
               ].map((s, i) => (
                 <motion.div
                   key={s.label}
@@ -151,9 +152,9 @@ export default function ResultsOverlay({ onPlayAgain }: Props) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 + i * 0.08 }}
                 >
-                  <div className="text-xl mb-1">{s.icon}</div>
+                  <div className="flex justify-center mb-1.5" style={{ color: theme.colors.primary }}>{s.icon}</div>
                   <div className="font-display text-xl font-bold" style={{ color: theme.colors.text }}>{s.value}</div>
-                  <div className="text-xs" style={{ color: theme.colors.textMuted }}>{s.label}</div>
+                  <div className="text-[10px] uppercase tracking-widest font-bold opacity-40" style={{ color: theme.colors.text }}>{s.label}</div>
                 </motion.div>
               ))}
             </div>
@@ -204,7 +205,10 @@ export default function ResultsOverlay({ onPlayAgain }: Props) {
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                onClick={() => router.push('/')}
+                onClick={() => {
+                  useGameStore.getState().resetGame();
+                  router.push('/');
+                }}
                 className="flex-1 py-3 rounded-2xl font-semibold text-sm glass"
                 style={{ color: theme.colors.text }}
               >

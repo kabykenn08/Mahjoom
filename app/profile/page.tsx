@@ -1,84 +1,106 @@
 'use client';
 
-// ============================================
-// Mahjoom — Profile Page
-// Analytics, archetype, mood history, upgrade
-// ============================================
-
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useMoodStore } from '@/store/moodStore';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { getUserStats } from '@/lib/supabase/queries';
 import AmbientBackground from '@/components/effects/AmbientBackground';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import DynamicIcon from '@/components/ui/DynamicIcon';
+import { 
+  Target, Waves, Zap, Leaf, Sparkles, Moon, 
+  Trophy, Zap as Speed, Brain, Flame, Info, LogOut
+} from 'lucide-react';
 
-const ARCHETYPE_DATA = {
-  icon: '🎯',
-  name: 'Strategic Explorer',
-  description: 'You approach each board as a system to be understood — not just solved. You clear layers deliberately, reading structure before acting.',
+function formatTime(s: number) {
+  if (!s) return '--:--';
+  const mins = Math.floor(s / 60);
+  const secs = s % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+const ARCHETYPES: Record<string, { name: string; desc: string; icon: string }> = {
+  focus: { icon: 'Target', name: 'The Laser', desc: 'Surgical precision. You cut through the board with unwavering focus.' },
+  relax: { icon: 'Waves', name: 'The Zen Seeker', desc: 'Calm and steady. For you, the journey is more important than the speed.' },
+  'deep-work': { icon: 'Zap', name: 'Flow Master', desc: 'Maximum efficiency. You enter the zone and stay there until the end.' },
+  'anxiety-reset': { icon: 'Leaf', name: 'Peace Maker', desc: 'Grounding. You use Mahjong as a tool for mental clarity and calm.' },
+  'creative-flow': { icon: 'Sparkles', name: 'Artistic Soul', desc: 'Playful patterns. You see the board as a canvas of possibilities.' },
+  'night-wind-down': { icon: 'Moon', name: 'Evening Sage', desc: 'Reflective. You end your day by organizing the chaos into order.' },
 };
-
-const MOOD_HISTORY = [
-  { mood: 'focus', count: 12, color: '#3b82f6' },
-  { mood: 'deep-work', count: 8, color: '#6366f1' },
-  { mood: 'relax', count: 5, color: '#f59e0b' },
-  { mood: 'night-wind-down', count: 4, color: '#8b5cf6' },
-  { mood: 'creative-flow', count: 3, color: '#ec4899' },
-  { mood: 'anxiety-reset', count: 2, color: '#10b981' },
-];
-
-const STATS_DATA = [
-  { label: 'Games Played', value: 34 },
-  { label: 'Win Rate', value: '71%' },
-  { label: 'Best Time', value: '4:22' },
-  { label: 'Avg Efficiency', value: '84%' },
-  { label: 'Hints Used', value: 18 },
-  { label: 'Current Streak', value: '5 days' },
-];
-
-const ACHIEVEMENTS = [
-  { icon: '🔥', name: 'On Fire', desc: '5-day streak', unlocked: true },
-  { icon: '⚡', name: 'Speed Run', desc: 'Under 5 minutes', unlocked: true },
-  { icon: '🧘', name: 'No Hints', desc: 'Complete without hints', unlocked: false },
-  { icon: '🌙', name: 'Night Owl', desc: '10 night sessions', unlocked: false },
-];
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { currentMood, theme } = useMoodStore();
-  const totalMoods = MOOD_HISTORY.reduce((a, b) => a + b.count, 0);
+  
+  const [stats, setStats] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       router.push('/login');
     }
-  }, [loading, isAuthenticated, router]);
+  }, [authLoading, isAuthenticated, router]);
 
-  if (loading || !isAuthenticated) {
+  useEffect(() => {
+    async function loadStats() {
+      if (user?.id) {
+        const data = await getUserStats(user.id);
+        setStats(data);
+        setIsLoading(false);
+      }
+    }
+    if (isAuthenticated) loadStats();
+  }, [user, isAuthenticated]);
+
+  if (authLoading || isLoading || !isAuthenticated) {
     return (
-      <div className="min-h-dvh flex items-center justify-center">
-        <div className="text-2xl animate-pulse">🀄</div>
+      <div className="min-h-dvh flex items-center justify-center bg-[#020205]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="text-4xl animate-bounce">🀄</div>
+          <p className="text-xs uppercase tracking-widest text-white/40 font-bold">Synchronizing...</p>
+        </div>
       </div>
     );
   }
 
+  // Calculate top mood for Archetype
+  const topMood = Object.entries(stats.moodCounts).reduce((a: any, b: any) => a[1] > b[1] ? a : b, ['focus', 0])[0];
+  const archetype = ARCHETYPES[topMood as string] || ARCHETYPES.focus;
+  const totalMoods = Object.values(stats.moodCounts).reduce((a: any, b: any) => a + b, 0) as number;
+
+  const displayStats = [
+    { label: 'Games Played', value: stats.totalPlayed },
+    { label: 'Win Rate', value: `${stats.winRate}%` },
+    { label: 'Best Time', value: formatTime(stats.bestTime) },
+    { label: 'Total Hints', value: stats.totalHints },
+    { label: 'Recent Streak', value: stats.recentRuns.filter((r: any) => r.won).length },
+    { label: 'Level', value: Math.floor(stats.totalPlayed / 5) + 1 },
+  ];
+
+  const achievements = [
+    { icon: <Flame size={20} />, name: 'Consistent', desc: 'Play 10 games', unlocked: stats.totalPlayed >= 10 },
+    { icon: <Speed size={20} />, name: 'Speedster', desc: 'Win under 4 min', unlocked: stats.bestTime > 0 && stats.bestTime < 240 },
+    { icon: <Brain size={20} />, name: 'Purist', desc: 'No hints in a win', unlocked: stats.recentRuns.some((r: any) => r.won && r.hints_used === 0) },
+    { icon: <Trophy size={20} />, name: 'Champion', desc: 'Win 5 games', unlocked: stats.totalPlayed >= 5 },
+  ];
+
   return (
-    <div className="relative min-h-dvh overflow-hidden">
+    <div className="relative min-h-dvh overflow-hidden flex flex-col">
       <AmbientBackground mood={currentMood} />
 
       {/* Nav */}
       <nav className="relative z-10 flex items-center justify-between px-8 py-6">
-        <button onClick={() => router.push('/')} className="font-display text-xl font-bold" style={{ color: theme.colors.text }}>
+        <button onClick={() => router.push('/')} className="font-display text-2xl font-bold" style={{ color: theme.colors.text }}>
           Mahj<span style={{ color: theme.colors.primary }}>oom</span>
         </button>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           <button onClick={() => router.push('/game')}
-            className="glass px-4 py-2 text-sm font-medium rounded-full btn-magnetic"
+            className="glass px-5 py-2 text-sm font-bold rounded-full btn-magnetic"
             style={{ color: theme.colors.text }}>
             Play Now
           </button>
@@ -87,106 +109,114 @@ export default function ProfilePage() {
               await supabase.auth.signOut();
               router.push('/');
             }}
-            className="text-xs font-medium transition-colors"
-            style={{ color: theme.colors.textMuted }}>
-            Sign Out
+            className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider opacity-60 hover:opacity-100 transition-opacity"
+            style={{ color: theme.colors.text }}>
+            <LogOut size={14} /> Sign Out
           </button>
         </div>
       </nav>
 
-      <div className="relative z-10 max-w-2xl mx-auto px-6 pb-16 space-y-6">
-        {/* Archetype Card */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-          className="glass rounded-3xl p-6"
-          style={{ borderColor: `${theme.colors.primary}25` }}>
-          <div className="flex items-start gap-4">
-            <div className="text-5xl">{ARCHETYPE_DATA.icon}</div>
-            <div>
-              <div className="text-xs uppercase tracking-widest mb-1" style={{ color: theme.colors.textMuted }}>Your Archetype</div>
-              <h2 className="font-display text-2xl font-bold mb-2" style={{ color: theme.colors.text }}>{ARCHETYPE_DATA.name}</h2>
-              <p className="text-sm leading-relaxed" style={{ color: theme.colors.textMuted }}>{ARCHETYPE_DATA.description}</p>
-            </div>
+      <div className="relative z-10 max-w-4xl mx-auto w-full px-6 pb-20 space-y-8">
+        {/* Profile Header */}
+        <div className="flex items-end gap-6 mb-4">
+          <div className="w-24 h-24 rounded-3xl glass flex items-center justify-center text-3xl font-black relative group overflow-hidden"
+            style={{ color: theme.colors.primary, borderColor: `${theme.colors.primary}40` }}>
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            {user?.email?.slice(0, 2).toUpperCase()}
           </div>
-        </motion.div>
+          <div>
+            <h1 className="text-4xl font-bold mb-1" style={{ color: theme.colors.text }}>{user?.email?.split('@')[0]}</h1>
+            <p className="text-sm font-medium" style={{ color: theme.colors.textMuted }}>Member since {new Date(user?.created_at || '').toLocaleDateString()}</p>
+          </div>
+        </div>
 
-        {/* Stats Grid */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="grid grid-cols-3 gap-3">
-          {STATS_DATA.map((s, i) => (
-            <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.05 }}
-              className="glass rounded-2xl p-4 text-center">
-              <div className="font-display text-2xl font-bold mb-1" style={{ color: theme.colors.text }}>{s.value}</div>
-              <div className="text-xs" style={{ color: theme.colors.textMuted }}>{s.label}</div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Mood History */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="glass rounded-3xl p-6">
-          <h3 className="font-display text-lg font-semibold mb-4" style={{ color: theme.colors.text }}>Mood History</h3>
-          <div className="space-y-3">
-            {MOOD_HISTORY.map((m) => (
-              <div key={m.mood} className="flex items-center gap-3">
-                <div className="text-xs w-28 capitalize" style={{ color: theme.colors.textMuted }}>{m.mood.replace('-', ' ')}</div>
-                <div className="flex-1 rounded-full overflow-hidden" style={{ background: `${m.color}15`, height: 6 }}>
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ background: m.color }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(m.count / totalMoods) * 100}%` }}
-                    transition={{ duration: 0.8, delay: 0.3 }}
-                  />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Left Column: Archetype & Stats */}
+          <div className="md:col-span-2 space-y-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              className="glass rounded-[2rem] p-8 border-t-2"
+              style={{ borderColor: `${theme.colors.primary}30` }}>
+              <div className="flex items-start gap-6">
+                <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center text-primary"
+                  style={{ color: theme.colors.primary }}>
+                  <DynamicIcon name={archetype.icon} size={32} />
                 </div>
-                <div className="text-xs w-6 text-right" style={{ color: theme.colors.textMuted }}>{m.count}</div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Achievements */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="glass rounded-3xl p-6">
-          <h3 className="font-display text-lg font-semibold mb-4" style={{ color: theme.colors.text }}>Achievements</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {ACHIEVEMENTS.map((a) => (
-              <div key={a.name} className="glass rounded-2xl p-4 flex items-center gap-3"
-                style={{ opacity: a.unlocked ? 1 : 0.4 }}>
-                <div className="text-2xl">{a.icon}</div>
                 <div>
-                  <div className="text-sm font-medium" style={{ color: theme.colors.text }}>{a.name}</div>
-                  <div className="text-xs" style={{ color: theme.colors.textMuted }}>{a.desc}</div>
+                  <Badge className="mb-2 glass bg-white/5 border-none text-[10px]" style={{ color: theme.colors.accent }}>YOUR ARCHETYPE</Badge>
+                  <h2 className="text-3xl font-bold mb-3" style={{ color: theme.colors.text }}>{archetype.name}</h2>
+                  <p className="text-sm leading-relaxed max-w-md" style={{ color: theme.colors.textMuted }}>{archetype.desc}</p>
                 </div>
-                {a.unlocked && (
-                  <Badge className="ml-auto text-xs" style={{ background: `${theme.colors.primary}20`, color: theme.colors.accent, border: 'none' }}>✓</Badge>
-                )}
               </div>
-            ))}
-          </div>
-        </motion.div>
+            </motion.div>
 
-        {/* Upgrade Banner */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="rounded-3xl p-6 relative overflow-hidden"
-          style={{ background: `linear-gradient(135deg, ${theme.colors.primary}20, ${theme.colors.secondary}15)`, border: `1px solid ${theme.colors.primary}30` }}>
-          <div className="relative z-10">
-            <div className="text-xs uppercase tracking-widest mb-2" style={{ color: theme.colors.accent }}>Mahjoom Pro</div>
-            <h3 className="font-display text-xl font-bold mb-1" style={{ color: theme.colors.text }}>Unlock everything.</h3>
-            <p className="text-sm mb-4" style={{ color: theme.colors.textMuted }}>Premium worlds, locked AI personalities, exclusive themes.</p>
-            <div className="flex gap-2 flex-wrap">
-              {['🌸 Sakura World', '🌌 Deep Space', '🔮 Crystal AI', '🎭 6 Personalities'].map((f) => (
-                <span key={f} className="text-xs px-3 py-1 rounded-full glass" style={{ color: theme.colors.textMuted }}>
-                  🔒 {f.split(' ').slice(1).join(' ')}
-                </span>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {displayStats.map((s, i) => (
+                <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + i * 0.05 }}
+                  className="glass rounded-2xl p-5 border-l-2"
+                  style={{ borderColor: `${theme.colors.primary}20` }}>
+                  <div className="text-2xl font-black mb-1" style={{ color: theme.colors.text }}>{s.value}</div>
+                  <div className="text-[10px] uppercase tracking-widest font-bold opacity-40" style={{ color: theme.colors.text }}>{s.label}</div>
+                </motion.div>
               ))}
             </div>
-            <button className="mt-4 px-6 py-2.5 rounded-xl text-sm font-semibold"
-              style={{ background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`, color: '#fff' }}>
-              Upgrade to Pro
-            </button>
+
+            {/* Mood History Chart */}
+            <div className="glass rounded-3xl p-8">
+              <h3 className="font-bold text-sm uppercase tracking-widest mb-6 opacity-60" style={{ color: theme.colors.text }}>Mood Distribution</h3>
+              <div className="space-y-5">
+                {Object.entries(stats.moodCounts).map(([mood, count]: [any, any]) => (
+                  <div key={mood} className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold" style={{ color: theme.colors.textMuted }}>
+                      <span className="capitalize">{mood.replace('-', ' ')}</span>
+                      <span>{Math.round((count / (totalMoods || 1)) * 100)}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }} 
+                        animate={{ width: `${(count / (totalMoods || 1)) * 100}%` }}
+                        transition={{ duration: 1, ease: 'easeOut' }}
+                        className="h-full rounded-full" 
+                        style={{ background: `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.accent})` }} 
+                      />
+                    </div>
+                  </div>
+                ))}
+                {totalMoods === 0 && <p className="text-xs text-center py-4 opacity-40">Play your first game to see mood data</p>}
+              </div>
+            </div>
           </div>
-        </motion.div>
+
+          {/* Right Column: Achievements & Pro */}
+          <div className="space-y-6">
+            <div className="glass rounded-3xl p-8">
+              <h3 className="font-bold text-sm uppercase tracking-widest mb-6 opacity-60" style={{ color: theme.colors.text }}>Achievements</h3>
+              <div className="space-y-4">
+                {achievements.map((a) => (
+                  <div key={a.name} className="flex items-center gap-4 group" style={{ opacity: a.unlocked ? 1 : 0.25 }}>
+                    <div className="w-10 h-10 rounded-xl glass flex items-center justify-center text-primary group-hover:scale-110 transition-transform"
+                      style={{ color: theme.colors.primary, borderColor: a.unlocked ? `${theme.colors.primary}40` : 'transparent' }}>
+                      {a.icon}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold" style={{ color: theme.colors.text }}>{a.name}</div>
+                      <div className="text-[10px]" style={{ color: theme.colors.textMuted }}>{a.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="glass rounded-3xl p-8 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-t-2 border-indigo-500/20">
+              <Badge className="mb-4 bg-indigo-500 text-[10px] text-white">UPGRADE</Badge>
+              <h3 className="text-xl font-bold mb-2 text-white">Mahjoom Pro</h3>
+              <p className="text-xs text-white/60 mb-6 leading-relaxed">Access deeper analytics, exclusive meditative worlds, and advanced AI coaching modes.</p>
+              <button className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:scale-[1.02] transition-transform">
+                Go Premium
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
