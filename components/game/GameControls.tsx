@@ -9,16 +9,35 @@ import { motion } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
 import { useMoodStore } from '@/store/moodStore';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useSound } from '@/hooks/useSound';
 
 export default function GameControls() {
   const { undoLastMove, useHint, reshuffle, pauseGame, resumeGame, isPaused, status, moves, undoStack } = useGameStore();
   const theme = useMoodStore((s) => s.theme);
+  const { playSound } = useSound();
 
   const handleHint = () => {
+    playSound('hint', 0.5);
     const hint = useHint();
     if (hint && (window as any).__setHint) {
       (window as any).__setHint({ id1: hint[0].id, id2: hint[1].id });
     }
+  };
+
+  const handleUndo = () => {
+    playSound('shuffle', 0.4); // Using shuffle sound for undo as it fits the "restoration" feel
+    undoLastMove();
+  };
+
+  const handleReshuffle = () => {
+    playSound('shuffle', 0.6);
+    reshuffle();
+  };
+
+  const handlePause = () => {
+    playSound('click', 0.3);
+    if (isPaused) resumeGame();
+    else pauseGame();
   };
 
   const controls = [
@@ -27,7 +46,7 @@ export default function GameControls() {
       icon: '↩',
       label: 'Undo',
       tooltip: 'Undo last move',
-      action: undoLastMove,
+      action: handleUndo,
       disabled: undoStack.length === 0,
     },
     {
@@ -43,7 +62,7 @@ export default function GameControls() {
       icon: '🔀',
       label: 'Reshuffle',
       tooltip: 'Redistribute remaining tiles',
-      action: reshuffle,
+      action: handleReshuffle,
       disabled: status !== 'playing',
     },
     {
@@ -51,7 +70,7 @@ export default function GameControls() {
       icon: isPaused ? '▶' : '⏸',
       label: isPaused ? 'Resume' : 'Pause',
       tooltip: isPaused ? 'Resume game' : 'Pause game',
-      action: isPaused ? resumeGame : pauseGame,
+      action: handlePause,
       disabled: status !== 'playing' && status !== 'paused',
     },
   ];

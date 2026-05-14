@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
 import { useMoodStore } from '@/store/moodStore';
+import { getLayerDistribution } from '@/core/mahjong/rules';
 import { AIGameContext } from '@/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -39,7 +40,7 @@ export default function AICoach() {
       recentMoves: moves.slice(-5),
       elapsedTime: elapsed,
       hintsUsed,
-      layerDistribution: {},
+      layerDistribution: getLayerDistribution(board.tiles),
       mood: currentMood,
       moveEfficiency: stats.efficiency,
     };

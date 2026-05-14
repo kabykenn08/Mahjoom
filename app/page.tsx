@@ -96,6 +96,14 @@ export default function LandingPage() {
           >
             Daily Challenge
           </button>
+
+          <button
+            onClick={() => router.push('/login')}
+            className="px-4 py-2 text-sm font-semibold transition-all hover:opacity-80"
+            style={{ color: activeTheme.colors.text }}
+          >
+            Sign In
+          </button>
         </motion.div>
       </nav>
 

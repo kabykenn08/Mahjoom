@@ -12,6 +12,7 @@ import { useGameStore } from '@/store/gameStore';
 import { useMoodStore } from '@/store/moodStore';
 import { AIGameContext } from '@/types';
 import { saveGameRun } from '@/lib/supabase/queries';
+import { getLayerDistribution } from '@/core/mahjong/rules';
 
 
 function formatTime(s: number) {
@@ -45,7 +46,7 @@ export default function ResultsOverlay({ onPlayAgain }: Props) {
         recentMoves: moves,
         elapsedTime: elapsed,
         hintsUsed,
-        layerDistribution: {},
+        layerDistribution: getLayerDistribution(board.tiles),
         mood: currentMood,
         moveEfficiency: stats?.efficiency ?? 0,
       };

@@ -8,6 +8,7 @@
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useMoodStore } from '@/store/moodStore';
+import { supabase } from '@/lib/supabase/client';
 import AmbientBackground from '@/components/effects/AmbientBackground';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -58,11 +59,22 @@ export default function ProfilePage() {
         <button onClick={() => router.push('/')} className="font-display text-xl font-bold" style={{ color: theme.colors.text }}>
           Mahj<span style={{ color: theme.colors.primary }}>oom</span>
         </button>
-        <button onClick={() => router.push('/game')}
-          className="glass px-4 py-2 text-sm font-medium rounded-full btn-magnetic"
-          style={{ color: theme.colors.text }}>
-          Play Now
-        </button>
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.push('/game')}
+            className="glass px-4 py-2 text-sm font-medium rounded-full btn-magnetic"
+            style={{ color: theme.colors.text }}>
+            Play Now
+          </button>
+          <button 
+            onClick={async () => {
+              await supabase.auth.signOut();
+              router.push('/');
+            }}
+            className="text-xs font-medium transition-colors"
+            style={{ color: theme.colors.textMuted }}>
+            Sign Out
+          </button>
+        </div>
       </nav>
 
       <div className="relative z-10 max-w-2xl mx-auto px-6 pb-16 space-y-6">

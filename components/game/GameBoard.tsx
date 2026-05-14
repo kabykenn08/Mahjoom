@@ -11,6 +11,7 @@ import { useMoodStore } from '@/store/moodStore';
 import { isTileFree } from '@/core/mahjong/rules';
 import { TileComponent } from './TileComponent';
 import { Tile } from '@/types';
+import { useSound } from '@/hooks/useSound';
 
 const TILE_W = 46;
 const TILE_H = 58;
@@ -22,11 +23,13 @@ interface HintPair {
 }
 
 export default function GameBoard() {
-  const { board, selectedTileId, selectTile, status } = useGameStore();
+  const { board, selectedTileId, selectTile, status, moves } = useGameStore();
   const theme = useMoodStore((s) => s.theme);
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [hintPair, setHintPair] = useState<HintPair | null>(null);
+  const { playSound } = useSound();
+  const lastMovesCount = useRef(moves.length);
 
   // Expose hint setter globally for the controls bar
   useEffect(() => {
@@ -40,6 +43,19 @@ export default function GameBoard() {
     const t = setTimeout(() => setHintPair(null), 3000);
     return () => clearTimeout(t);
   }, [hintPair]);
+
+  // Handle sounds for matches and win/loss
+  useEffect(() => {
+    if (moves.length > lastMovesCount.current) {
+      playSound('match', 0.5);
+    }
+    lastMovesCount.current = moves.length;
+  }, [moves.length, playSound]);
+
+  useEffect(() => {
+    if (status === 'won') playSound('win', 0.6);
+    if (status === 'lost') playSound('lose', 0.5);
+  }, [status, playSound]);
 
   // Calculate board bounds
   const { boardWidth, boardHeight, offsetX, offsetY } = useMemo(() => {
@@ -82,9 +98,10 @@ export default function GameBoard() {
 
   const handleTileClick = useCallback((id: string) => {
     if (status !== 'playing') return;
+    playSound('click', 0.3);
     selectTile(id);
     setHintPair(null);
-  }, [status, selectTile]);
+  }, [status, selectTile, playSound]);
 
   if (!board) return (
     <div className="flex-1 flex items-center justify-center">

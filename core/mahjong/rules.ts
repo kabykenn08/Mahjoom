@@ -179,3 +179,14 @@ export function calculateGameStats(allTiles: Tile[], moves: GameMove[], elapsed:
     timeElapsed: elapsed,
   };
 }
+/**
+ * Get distribution of remaining tiles across layers.
+ */
+export function getLayerDistribution(allTiles: Tile[]): Record<number, number> {
+  const dist: Record<number, number> = {};
+  allTiles.filter(t => !t.isRemoved).forEach(t => {
+    const l = t.position.layer;
+    dist[l] = (dist[l] || 0) + 1;
+  });
+  return dist;
+}
