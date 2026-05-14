@@ -1,41 +1,52 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
+# === DEPENDENCIES ===
+# Dependencies should never be committed to version control
+node_modules/
+.pnp
 .pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.yarn/
 
-# testing
-/coverage
+# === BUILD ARTIFACTS ===
+# Compiled output and build metadata
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
+# === ENVIRONMENT & SECRETS ===
+# Local environment variables containing secrets
+.env
+.env.*
+.env.local
+.env.*.local
+# Security credentials and keys
 *.pem
+*.key
+secrets.*
 
-# debug
+# === OS & EDITOR JUNK ===
+# System specific files
+.DS_Store
+Thumbs.db
+# Editor specific configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === LOGS & TEMPORARY FILES ===
+# Log files
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+logs/
+*.log
+# Test coverage artifacts
+coverage/
 
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
+# === PROJECT-SPECIFIC ===
+# Auto-generated Next.js types
 next-env.d.ts
+# Vercel deployment metadata
+.vercel
