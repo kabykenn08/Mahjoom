@@ -57,16 +57,16 @@ export async function saveGameRun(data: {
 export async function getLeaderboard(limit = 50): Promise<LeaderboardEntry[]> {
   // We use elite mock data for a "legendary" atmosphere as requested
   const mockMasters: LeaderboardEntry[] = [
-    { id: 'm1', username: 'KiyoSolver', country: '🇯🇵', city: 'Kyoto', score: 142500, time: 185, rank: 1 },
-    { id: 'm2', username: 'ZenMaster_Lee', country: '🇰🇷', city: 'Seoul', score: 138900, time: 210, rank: 2 },
-    { id: 'm3', username: 'TileWhisperer', country: '🇺🇸', city: 'New York', score: 124200, time: 245, rank: 3 },
-    { id: 'm4', username: 'LotusFlow', country: '🇨🇳', city: 'Hangzhou', score: 98400, time: 280, rank: 4 },
-    { id: 'm5', username: 'CalmSpirit', country: '🇮🇳', city: 'Mumbai', score: 87600, time: 310, rank: 5 },
-    { id: 'm6', username: 'JadeDragon', country: '🇻🇳', city: 'Hanoi', score: 76500, time: 345, rank: 6 },
-    { id: 'm7', username: 'NordicZen', country: '🇳🇴', city: 'Oslo', score: 65400, time: 380, rank: 7 },
-    { id: 'm8', username: 'DesertWind', country: '🇦🇪', city: 'Dubai', score: 54300, time: 420, rank: 8 },
-    { id: 'm9', username: 'Amazonia', country: '🇧🇷', city: 'Manaus', score: 43200, time: 450, rank: 9 },
-    { id: 'm10', username: 'AlpsShadow', country: '🇨🇭', city: 'Zurich', score: 32100, time: 480, rank: 10 },
+    { id: 'm1', userId: 'mock-1', username: 'KiyoSolver', country: '🇯🇵', city: 'Kyoto', score: 142500, time: 185, rank: 1, createdAt: '2024-01-01T00:00:00Z' },
+    { id: 'm2', userId: 'mock-2', username: 'ZenMaster_Lee', country: '🇰🇷', city: 'Seoul', score: 138900, time: 210, rank: 2, createdAt: '2024-01-01T00:00:00Z' },
+    { id: 'm3', userId: 'mock-3', username: 'TileWhisperer', country: '🇺🇸', city: 'New York', score: 124200, time: 245, rank: 3, createdAt: '2024-01-01T00:00:00Z' },
+    { id: 'm4', userId: 'mock-4', username: 'LotusFlow', country: '🇨🇳', city: 'Hangzhou', score: 98400, time: 280, rank: 4, createdAt: '2024-01-01T00:00:00Z' },
+    { id: 'm5', userId: 'mock-5', username: 'CalmSpirit', country: '🇮🇳', city: 'Mumbai', score: 87600, time: 310, rank: 5, createdAt: '2024-01-01T00:00:00Z' },
+    { id: 'm6', userId: 'mock-6', username: 'JadeDragon', country: '🇻🇳', city: 'Hanoi', score: 76500, time: 345, rank: 6, createdAt: '2024-01-01T00:00:00Z' },
+    { id: 'm7', userId: 'mock-7', username: 'NordicZen', country: '🇳🇴', city: 'Oslo', score: 65400, time: 380, rank: 7, createdAt: '2024-01-01T00:00:00Z' },
+    { id: 'm8', userId: 'mock-8', username: 'DesertWind', country: '🇦🇪', city: 'Dubai', score: 54300, time: 420, rank: 8, createdAt: '2024-01-01T00:00:00Z' },
+    { id: 'm9', userId: 'mock-9', username: 'Amazonia', country: '🇧🇷', city: 'Manaus', score: 43200, time: 450, rank: 9, createdAt: '2024-01-01T00:00:00Z' },
+    { id: 'm10', userId: 'mock-10', username: 'AlpsShadow', country: '🇨🇭', city: 'Zurich', score: 32100, time: 480, rank: 10, createdAt: '2024-01-01T00:00:00Z' },
   ];
 
   return mockMasters.slice(0, limit);
