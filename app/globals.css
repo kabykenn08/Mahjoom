@@ -1,26 +1,162 @@
+/* ============================================
+   Mahjoom — Global CSS / Design System
+   ============================================ */
+
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
+
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-display: 'Outfit', system-ui, sans-serif;
+    --radius: 0.75rem;
+
+    --mood-primary: #3b82f6;
+    --mood-secondary: #1d4ed8;
+    --mood-accent: #60a5fa;
+    --mood-bg: #020817;
+    --mood-surface: rgba(15, 23, 42, 0.8);
+    --mood-surface-hover: rgba(30, 41, 59, 0.9);
+    --mood-text: #e2e8f0;
+    --mood-text-muted: #64748b;
+    --mood-glow: rgba(59, 130, 246, 0.4);
+    --mood-particle: #3b82f6;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--mood-bg);
+    color: var(--mood-text);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .glass {
+    background: var(--mood-surface);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius);
+  }
+
+  .glass-hover {
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+
+  .glass-hover:hover {
+    background: var(--mood-surface-hover);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 20px var(--mood-glow), 0 0 40px color-mix(in srgb, var(--mood-glow) 30%, transparent);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 20px var(--mood-glow);
+  }
+
+  .btn-magnetic {
+    position: relative;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+  }
+
+  .btn-magnetic:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--mood-glow);
+  }
+
+  .btn-magnetic:active {
+    transform: translateY(0);
+  }
+
+  .tile {
+    position: absolute;
+    border-radius: 8px;
+    cursor: default;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.3s ease;
+    user-select: none;
+    will-change: transform;
+  }
+
+  .tile-free {
+    cursor: pointer;
+  }
+
+  .tile-free:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 20px var(--mood-glow);
+    z-index: 10;
+  }
+
+  .tile-selected {
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 0 0 0 2px var(--mood-primary), 0 8px 30px var(--mood-glow);
+    z-index: 20;
+  }
+
+  .tile-blocked {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .tile-hint {
+    animation: tile-pulse 1s ease-in-out infinite;
+  }
+
+  @keyframes tile-pulse {
+    0%, 100% { box-shadow: 0 0 10px var(--mood-glow); }
+    50% { box-shadow: 0 0 30px var(--mood-glow), 0 0 60px color-mix(in srgb, var(--mood-glow) 50%, transparent); }
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, var(--mood-text) 0%, var(--mood-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .page-fade {
+    animation: page-in 0.4s ease forwards;
+  }
+
+  @keyframes page-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--mood-text-muted);
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--mood-accent); }
+
+  .font-display { font-family: var(--font-display); }
 }
