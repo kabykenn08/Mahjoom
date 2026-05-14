@@ -128,6 +128,12 @@ export interface MoodTheme {
     tone: string;
     verbosity: 'minimal' | 'moderate' | 'expressive';
   };
+  mechanics: {
+    allowHints: boolean;
+    allowUndo: boolean;
+    timeScale: number;
+    scoreMultiplier: number;
+  };
 }
 
 // --- Player Types ---
@@ -195,6 +201,7 @@ export interface AIGameContext {
   layerDistribution: Record<number, number>;
   mood: MoodType;
   moveEfficiency: number;
+  visibleTiles?: { label: string; layer: number }[];
 }
 
 export interface AIEndGameSummary {

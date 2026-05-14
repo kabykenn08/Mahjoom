@@ -16,22 +16,20 @@ function formatTime(seconds: number): string {
 }
 
 export default function GameTimer() {
-  const { status, startTime, elapsed, tick, isPaused } = useGameStore();
+  const { status, elapsed, incrementElapsed, isPaused } = useGameStore();
   const theme = useMoodStore((s) => s.theme);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (status === 'playing' && !isPaused) {
       intervalRef.current = setInterval(() => {
-        const now = Date.now();
-        const secs = Math.floor((now - (startTime ?? now)) / 1000);
-        tick(secs);
-      }, 1000);
+        incrementElapsed();
+      }, 1000 / theme.mechanics.timeScale);
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [status, isPaused, startTime, tick]);
+  }, [status, isPaused, incrementElapsed]);
 
   return (
     <div className="font-display text-2xl font-semibold tabular-nums" style={{ color: theme.colors.text }}>

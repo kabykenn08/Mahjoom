@@ -5,10 +5,12 @@
 // Analytics, archetype, mood history, upgrade
 // ============================================
 
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useMoodStore } from '@/store/moodStore';
 import { supabase } from '@/lib/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import AmbientBackground from '@/components/effects/AmbientBackground';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -47,8 +49,23 @@ const ACHIEVEMENTS = [
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { isAuthenticated, loading } = useAuth();
   const { currentMood, theme } = useMoodStore();
   const totalMoods = MOOD_HISTORY.reduce((a, b) => a + b.count, 0);
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [loading, isAuthenticated, router]);
+
+  if (loading || !isAuthenticated) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center">
+        <div className="text-2xl animate-pulse">🀄</div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-dvh overflow-hidden">

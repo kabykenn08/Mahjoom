@@ -15,6 +15,7 @@ import {
   isGameWon, isGameLost, getHint, calculateGameStats,
 } from '@/core/mahjong/rules';
 import { reshuffleBoard } from '@/core/mahjong/generator';
+import { useMoodStore } from './moodStore';
 
 interface GameStore extends GameState {
   // Actions
@@ -26,7 +27,7 @@ interface GameStore extends GameState {
   pauseGame: () => void;
   resumeGame: () => void;
   resetGame: () => void;
-  tick: (elapsed: number) => void;
+  incrementElapsed: () => void;
 
   // Computed helpers
   getFreeTiles: () => Tile[];
@@ -118,7 +119,9 @@ export const useGameStore = create<GameStore>()(
 
     useHint: () => {
       const { board } = get();
-      if (!board) return null;
+      const theme = useMoodStore.getState().theme;
+      if (!board || !theme.mechanics.allowHints) return null;
+      
       const hint = getHint(board.tiles);
       if (hint) {
         set((s) => ({ hintsUsed: s.hintsUsed + 1 }));
@@ -128,7 +131,8 @@ export const useGameStore = create<GameStore>()(
 
     undoLastMove: () => {
       const { board, undoStack } = get();
-      if (!board || undoStack.length === 0) return;
+      const theme = useMoodStore.getState().theme;
+      if (!board || undoStack.length === 0 || !theme.mechanics.allowUndo) return;
 
       const lastMove = undoStack[undoStack.length - 1];
       const restoredTiles = undoMove(board.tiles, lastMove);
@@ -158,7 +162,7 @@ export const useGameStore = create<GameStore>()(
 
     resetGame: () => set(initialState),
 
-    tick: (elapsed) => set({ elapsed }),
+    incrementElapsed: () => set((s) => ({ elapsed: s.elapsed + 1 })),
 
     getFreeTiles: () => {
       const { board } = get();

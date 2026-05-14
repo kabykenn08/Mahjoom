@@ -26,6 +26,12 @@ export const MOOD_THEMES: Record<MoodType, MoodTheme> = {
     },
     animation: { speed: 1.0, particleIntensity: 0.3, backgroundMotion: 0.4 },
     ai: { personality: 'analytical', tone: 'precise and strategic', verbosity: 'minimal' },
+    mechanics: {
+      allowHints: true,
+      allowUndo: true,
+      timeScale: 1.2,
+      scoreMultiplier: 1.5,
+    }
   },
 
   relax: {
@@ -48,6 +54,12 @@ export const MOOD_THEMES: Record<MoodType, MoodTheme> = {
     },
     animation: { speed: 0.6, particleIntensity: 0.5, backgroundMotion: 0.3 },
     ai: { personality: 'nurturing', tone: 'warm and encouraging', verbosity: 'moderate' },
+    mechanics: {
+      allowHints: true,
+      allowUndo: true,
+      timeScale: 0.8,
+      scoreMultiplier: 0.8,
+    }
   },
 
   'deep-work': {
@@ -70,6 +82,12 @@ export const MOOD_THEMES: Record<MoodType, MoodTheme> = {
     },
     animation: { speed: 0.8, particleIntensity: 0.2, backgroundMotion: 0.2 },
     ai: { personality: 'strategic', tone: 'focused and insightful', verbosity: 'minimal' },
+    mechanics: {
+      allowHints: false, // Harder mode
+      allowUndo: false,  // Commit to moves
+      timeScale: 1.0,
+      scoreMultiplier: 2.0,
+    }
   },
 
   'anxiety-reset': {
@@ -92,6 +110,12 @@ export const MOOD_THEMES: Record<MoodType, MoodTheme> = {
     },
     animation: { speed: 0.5, particleIntensity: 0.6, backgroundMotion: 0.2 },
     ai: { personality: 'calming', tone: 'gentle and reassuring', verbosity: 'moderate' },
+    mechanics: {
+      allowHints: true,
+      allowUndo: true,
+      timeScale: 0.5,
+      scoreMultiplier: 0.5,
+    }
   },
 
   'creative-flow': {
@@ -114,6 +138,12 @@ export const MOOD_THEMES: Record<MoodType, MoodTheme> = {
     },
     animation: { speed: 1.4, particleIntensity: 0.9, backgroundMotion: 0.8 },
     ai: { personality: 'playful', tone: 'enthusiastic and creative', verbosity: 'expressive' },
+    mechanics: {
+      allowHints: true,
+      allowUndo: true,
+      timeScale: 1.5,
+      scoreMultiplier: 1.2,
+    }
   },
 
   'night-wind-down': {
@@ -136,6 +166,12 @@ export const MOOD_THEMES: Record<MoodType, MoodTheme> = {
     },
     animation: { speed: 0.5, particleIntensity: 0.7, backgroundMotion: 0.3 },
     ai: { personality: 'reflective', tone: 'poetic and serene', verbosity: 'moderate' },
+    mechanics: {
+      allowHints: true,
+      allowUndo: true,
+      timeScale: 0.7,
+      scoreMultiplier: 1.0,
+    }
   },
 };
 

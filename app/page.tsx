@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useMoodStore } from '@/store/moodStore';
+import { useAuth } from '@/hooks/useAuth';
 import { MOOD_ORDER } from '@/lib/moods';
 import { MoodType } from '@/types';
 import { getMoodTheme } from '@/lib/moods';
@@ -37,6 +38,7 @@ const MOOD_NAMES: Record<MoodType, string> = {
 
 export default function LandingPage() {
   const router = useRouter();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const { currentMood, setMood } = useMoodStore();
   const [hoveredMood, setHoveredMood] = useState<MoodType | null>(null);
   const [showHelp, setShowHelp] = useState(false);
@@ -44,7 +46,11 @@ export default function LandingPage() {
   const activeTheme = getMoodTheme(activeMood);
 
   const handlePlay = () => {
-    router.push('/game');
+    if (isAuthenticated) {
+      router.push('/game');
+    } else {
+      router.push('/login');
+    }
   };
 
   return (
@@ -86,24 +92,33 @@ export default function LandingPage() {
             Leaderboard
           </button>
 
-          <button
-            onClick={() => router.push('/game?mode=daily')}
-            className="glass px-4 py-2 text-sm font-medium rounded-full btn-magnetic transition-all"
-            style={{
-              color: activeTheme.colors.text,
-              borderColor: `${activeTheme.colors.primary}40`,
-            }}
-          >
-            Daily Challenge
-          </button>
-
-          <button
-            onClick={() => router.push('/login')}
-            className="px-4 py-2 text-sm font-semibold transition-all hover:opacity-80"
-            style={{ color: activeTheme.colors.text }}
-          >
-            Sign In
-          </button>
+          {!authLoading && (
+            <>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => router.push('/profile')}
+                  className="glass px-4 py-2 text-sm font-medium rounded-full btn-magnetic transition-all"
+                  style={{
+                    color: activeTheme.colors.text,
+                    borderColor: `${activeTheme.colors.primary}40`,
+                  }}
+                >
+                  My Profile
+                </button>
+              ) : (
+                <button
+                  onClick={() => router.push('/login')}
+                  className="glass px-4 py-2 text-sm font-medium rounded-full btn-magnetic transition-all"
+                  style={{
+                    color: activeTheme.colors.text,
+                    borderColor: `${activeTheme.colors.primary}40`,
+                  }}
+                >
+                  Sign In
+                </button>
+              )}
+            </>
+          )}
         </motion.div>
       </nav>
 
@@ -196,7 +211,7 @@ export default function LandingPage() {
             <motion.button
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => router.push('/game?mode=daily')}
+              onClick={() => router.push(isAuthenticated ? '/game?mode=daily' : '/login')}
               className="px-8 py-4 rounded-2xl font-medium text-base glass btn-magnetic"
               style={{ color: activeTheme.colors.text }}
             >

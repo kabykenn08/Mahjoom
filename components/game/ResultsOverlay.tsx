@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { useGameStore } from '@/store/gameStore';
 import { useMoodStore } from '@/store/moodStore';
 import { AIGameContext } from '@/types';
+import { supabase } from '@/lib/supabase/client';
 import { saveGameRun } from '@/lib/supabase/queries';
 import { getLayerDistribution } from '@/core/mahjong/rules';
 
@@ -55,13 +56,16 @@ export default function ResultsOverlay({ onPlayAgain }: Props) {
       setReflection('');
 
       // Save run to database
-      saveGameRun({
-        boardSeed: board.seed,
-        mood: currentMood,
-        duration: elapsed,
-        moves: moves.length,
-        hintsUsed: hintsUsed,
-        won: won,
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        saveGameRun({
+          userId: user?.id,
+          boardSeed: board.seed,
+          mood: currentMood,
+          duration: elapsed,
+          moves: moves.length,
+          hintsUsed: hintsUsed,
+          won: won,
+        });
       });
 
       try {

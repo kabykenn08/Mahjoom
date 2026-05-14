@@ -42,141 +42,147 @@ export default function LeaderboardPage() {
     load();
   }, []);
 
+  const podium = entries.slice(0, 3);
+  const rest = entries.slice(3);
+
   return (
-    <div className="relative min-h-dvh overflow-hidden">
+    <div className="relative min-h-dvh overflow-hidden flex flex-col">
       <AmbientBackground mood={currentMood} />
 
       {/* Nav */}
       <nav className="relative z-10 flex items-center justify-between px-8 py-6">
-        <button
-          onClick={() => router.push('/')}
-          className="font-display text-xl font-bold"
-          style={{ color: theme.colors.text }}
-        >
+        <button onClick={() => router.push('/')} className="font-display text-2xl font-bold" style={{ color: theme.colors.text }}>
           Mahj<span style={{ color: theme.colors.primary }}>oom</span>
         </button>
-        <button
-          onClick={() => router.push('/game')}
-          className="glass px-4 py-2 text-sm font-medium rounded-full btn-magnetic"
-          style={{ color: theme.colors.text }}
-        >
+        <button onClick={() => router.push('/game')} className="glass px-5 py-2.5 text-sm font-bold rounded-full btn-magnetic transition-all"
+          style={{ color: theme.colors.text, borderColor: `${theme.colors.primary}40` }}>
           Play Now
         </button>
       </nav>
 
-      <div className="relative z-10 max-w-2xl mx-auto px-6 pb-16">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <h1 className="font-display text-4xl font-bold mb-2" style={{ color: theme.colors.text }}>
-            Leaderboard
-          </h1>
-          <p className="text-sm mb-8" style={{ color: theme.colors.textMuted }}>
-            Global rankings — updated daily
-          </p>
+      <div className="relative z-10 flex-1 max-w-4xl mx-auto w-full px-6 pb-20">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+          <header className="text-center mb-12">
+            <Badge className="mb-4 glass px-4 py-1" style={{ color: theme.colors.accent, background: `${theme.colors.primary}15`, border: 'none' }}>
+              Global Rankings
+            </Badge>
+            <h1 className="font-display text-5xl md:text-6xl font-bold mb-4 tracking-tight" style={{ color: theme.colors.text }}>
+              The Hall of <span style={{ color: theme.colors.primary }}>Zen</span>
+            </h1>
+            <p className="text-base max-w-md mx-auto" style={{ color: theme.colors.textMuted }}>
+              Recognizing the most mindful and efficient players across the globe.
+            </p>
+          </header>
 
-          <Tabs defaultValue="global">
-            <TabsList className="glass mb-6 rounded-xl p-1">
-              {['global', 'daily', 'country'].map((tab) => (
-                <TabsTrigger
-                  key={tab}
-                  value={tab}
-                  className="rounded-lg capitalize text-sm font-medium data-[state=active]:text-white"
-                  style={{
-                    color: theme.colors.textMuted,
-                  }}
-                >
-                  {tab === 'global' ? '🌍 Global' : tab === 'daily' ? '📅 Today' : '🗺 Country'}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+          <Tabs defaultValue="global" className="w-full">
+            <div className="flex justify-center mb-10">
+              <TabsList className="glass p-1 rounded-2xl h-12">
+                {['global', 'daily', 'country'].map((tab) => (
+                  <TabsTrigger key={tab} value={tab} className="px-8 rounded-xl capitalize text-sm font-bold data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all">
+                    {tab === 'global' ? '🌍 World' : tab === 'daily' ? '📅 Daily' : '🗺 My Region'}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
-            {['global', 'daily', 'country'].map((tab) => (
-              <TabsContent key={tab} value={tab}>
-                <div className="space-y-2">
-                  {isLoading ? (
-                    <div className="text-center py-12" style={{ color: theme.colors.textMuted }}>
-                      <div className="text-2xl animate-pulse mb-2">🀄</div>
-                      <p className="text-sm">Fetching rankings...</p>
-                    </div>
-                  ) : entries.length === 0 ? (
-                    <div className="text-center py-12" style={{ color: theme.colors.textMuted }}>
-                      <p className="text-sm">No entries yet. Be the first!</p>
-                    </div>
-                  ) : (
-                    entries.map((entry, i) => {
-                      const rankStyle = getRankStyle(i + 1);
-                      return (
-                        <motion.div
-                          key={entry.username}
-                          initial={{ opacity: 0, x: -16 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.05 }}
-                          className="glass glass-hover rounded-2xl px-5 py-4 flex items-center gap-4"
-                          style={{ borderColor: i < 3 ? `${rankStyle.color}30` : 'transparent' }}
-                        >
-                          {/* Rank */}
-                          <div className="w-8 text-center font-display font-bold text-sm" style={{ color: rankStyle.color }}>
-                            {rankStyle.icon}
-                          </div>
-
-                          {/* Avatar */}
-                          <Avatar className="w-9 h-9">
-                            <AvatarFallback
-                              style={{ background: `${theme.colors.primary}20`, color: theme.colors.primary, fontSize: 13 }}
-                            >
-                              {entry.username.slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-
-                          {/* Name & location */}
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-sm truncate" style={{ color: theme.colors.text }}>
-                              {entry.username}
-                            </div>
-                            <div className="text-xs" style={{ color: theme.colors.textMuted }}>
-                              {entry.country} {entry.city}
-                            </div>
-                          </div>
-
-                          {/* Score & time */}
-                          <div className="text-right">
-                            <div className="font-display font-semibold text-sm" style={{ color: theme.colors.accent }}>
-                              {entry.score.toLocaleString()}
-                            </div>
-                            <div className="text-xs" style={{ color: theme.colors.textMuted }}>
-                              {formatTime(entry.time)}
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })
-                  )}
+            <TabsContent value="global" className="space-y-12">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <div className="text-4xl animate-bounce mb-4">🀄</div>
+                  <p className="text-sm font-medium animate-pulse" style={{ color: theme.colors.textMuted }}>Reading the stars...</p>
                 </div>
+              ) : (
+                <>
+                  {/* Podium */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end mb-16">
+                    {/* Rank 2 */}
+                    {podium[1] && (
+                      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                        className="glass rounded-3xl p-6 text-center order-2 md:order-1 h-64 flex flex-col justify-center relative border-t-4"
+                        style={{ borderColor: '#94a3b840' }}>
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-3xl">🥈</div>
+                        <Avatar className="w-16 h-16 mx-auto mb-4 border-2 border-slate-400/30">
+                          <AvatarFallback style={{ background: '#94a3b820', color: '#94a3b8' }}>{podium[1].username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <h3 className="font-bold text-lg truncate" style={{ color: theme.colors.text }}>{podium[1].username}</h3>
+                        <p className="text-xs mb-3" style={{ color: theme.colors.textMuted }}>{podium[1].country} {podium[1].city}</p>
+                        <div className="font-display text-2xl font-black" style={{ color: theme.colors.accent }}>{podium[1].score.toLocaleString()}</div>
+                      </motion.div>
+                    )}
 
-                {/* Sign-in prompt */}
-                <motion.div
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-                  className="glass rounded-2xl p-6 text-center mt-6"
-                  style={{ borderColor: `${theme.colors.primary}20` }}
-                >
-                  <p className="text-sm mb-3" style={{ color: theme.colors.textMuted }}>
-                    Sign in to appear on the leaderboard
-                  </p>
-                  <button
-                    className="px-6 py-2.5 rounded-xl text-sm font-semibold"
-                    style={{
-                      background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-                      color: '#fff',
-                    }}
-                  >
-                    Join Rankings
+                    {/* Rank 1 */}
+                    {podium[0] && (
+                      <motion.div initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: 0.1 }}
+                        className="glass rounded-[2.5rem] p-8 text-center order-1 md:order-2 h-80 flex flex-col justify-center relative border-t-4 shadow-2xl"
+                        style={{ borderColor: '#fbbf2460', boxShadow: `0 0 40px #fbbf2415` }}>
+                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-5xl">👑</div>
+                        <Avatar className="w-20 h-20 mx-auto mb-4 border-4 border-amber-400/40">
+                          <AvatarFallback style={{ background: '#fbbf2420', color: '#fbbf24' }}>{podium[0].username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <h3 className="font-bold text-xl truncate" style={{ color: theme.colors.text }}>{podium[0].username}</h3>
+                        <p className="text-sm mb-4" style={{ color: theme.colors.textMuted }}>{podium[0].country} {podium[0].city}</p>
+                        <div className="font-display text-4xl font-black text-gradient" style={{ backgroundImage: 'linear-gradient(135deg, #fbbf24, #f59e0b)' }}>
+                          {podium[0].score.toLocaleString()}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Rank 3 */}
+                    {podium[2] && (
+                      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                        className="glass rounded-3xl p-6 text-center order-3 md:order-3 h-56 flex flex-col justify-center relative border-t-4"
+                        style={{ borderColor: '#cd7c3f40' }}>
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-3xl">🥉</div>
+                        <Avatar className="w-14 h-14 mx-auto mb-4 border-2 border-orange-700/30">
+                          <AvatarFallback style={{ background: '#cd7c3f20', color: '#cd7c3f' }}>{podium[2].username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <h3 className="font-bold text-base truncate" style={{ color: theme.colors.text }}>{podium[2].username}</h3>
+                        <p className="text-xs mb-2" style={{ color: theme.colors.textMuted }}>{podium[2].country} {podium[2].city}</p>
+                        <div className="font-display text-xl font-black" style={{ color: theme.colors.accent }}>{podium[2].score.toLocaleString()}</div>
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* List for the rest */}
+                  <div className="space-y-3">
+                    {rest.map((entry, i) => (
+                      <motion.div key={entry.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + i * 0.05 }}
+                        className="glass glass-hover rounded-2xl px-6 py-4 flex items-center gap-6 group">
+                        <div className="w-6 text-sm font-bold opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: theme.colors.text }}>
+                          {i + 4}
+                        </div>
+                        <Avatar className="w-10 h-10">
+                          <AvatarFallback style={{ background: `${theme.colors.primary}15`, color: theme.colors.text }}>{entry.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="font-bold text-sm" style={{ color: theme.colors.text }}>{entry.username}</div>
+                          <div className="text-xs" style={{ color: theme.colors.textMuted }}>{entry.country} • {entry.city}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-display font-black text-sm" style={{ color: theme.colors.accent }}>{entry.score.toLocaleString()}</div>
+                          <div className="text-[10px] font-medium" style={{ color: theme.colors.textMuted }}>{formatTime(entry.time)}</div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Bottom CTA */}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}
+                className="glass rounded-3xl p-10 text-center relative overflow-hidden"
+                style={{ borderColor: `${theme.colors.primary}30` }}>
+                <div className="relative z-10">
+                  <h3 className="text-2xl font-bold mb-2" style={{ color: theme.colors.text }}>Ready to join them?</h3>
+                  <p className="text-sm mb-6 max-w-xs mx-auto" style={{ color: theme.colors.textMuted }}>Every match counts. Start your session and claim your place in the Hall of Zen.</p>
+                  <button onClick={() => router.push('/game')}
+                    className="px-10 py-4 rounded-2xl font-bold transition-all hover:scale-105"
+                    style={{ background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`, color: '#fff' }}>
+                    Start New Game
                   </button>
-                </motion.div>
-              </TabsContent>
-            ))}
+                </div>
+              </motion.div>
+            </TabsContent>
           </Tabs>
         </motion.div>
       </div>

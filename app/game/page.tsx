@@ -10,6 +10,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
 import { useMoodStore } from '@/store/moodStore';
+import { useAuth } from '@/hooks/useAuth';
 import { generateSolvableBoard, generateDailyBoard } from '@/core/mahjong/generator';
 import { TURTLE_LAYOUT } from '@/core/mahjong/board';
 import GameBoard from '@/components/game/GameBoard';
@@ -17,12 +18,14 @@ import GameControls from '@/components/game/GameControls';
 import GameTimer from '@/components/game/GameTimer';
 import GameStats from '@/components/game/GameStats';
 import AICoach from '@/components/game/AICoach';
+import MoodMechanicsInfo from '@/components/game/MoodMechanicsInfo';
 import ResultsOverlay from '@/components/game/ResultsOverlay';
 import AmbientBackground from '@/components/effects/AmbientBackground';
 
 function GameContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const mode = searchParams.get('mode');
   const { initGame, resetGame, board, status } = useGameStore();
   const { currentMood, theme } = useMoodStore();
@@ -40,10 +43,23 @@ function GameContent() {
   }, [mode, initGame]);
 
   useEffect(() => {
-    if (!board || status === 'idle') {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    if (isAuthenticated && (!board || status === 'idle')) {
       startNewGame();
     }
-  }, []);
+  }, [authLoading, isAuthenticated, board, status, startNewGame, router]);
+
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center">
+        <div className="text-2xl animate-pulse">🀄</div>
+      </div>
+    );
+  }
 
   const handlePlayAgain = () => {
     resetGame();
@@ -93,10 +109,27 @@ function GameContent() {
           {/* Stats bar */}
           <div className="flex items-center justify-between mb-3 px-2">
             <GameStats />
-            <div className="text-xs glass px-3 py-1.5 rounded-full font-medium"
-              style={{ color: theme.colors.accent }}>
-              {mode === 'daily' ? '📅 Daily Challenge' : `${currentMood.replace('-', ' ')} mode`}
-            </div>
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-xs glass px-4 py-2 rounded-full font-bold flex items-center gap-2"
+              style={{ 
+                color: mode === 'daily' ? '#fbbf24' : theme.colors.accent,
+                borderColor: mode === 'daily' ? '#fbbf2440' : `${theme.colors.primary}20`,
+                boxShadow: mode === 'daily' ? '0 0 20px #fbbf2415' : 'none'
+              }}>
+              {mode === 'daily' ? (
+                <>
+                  <span className="text-sm">🏆</span>
+                  <span>GLOBAL DAILY CHALLENGE</span>
+                </>
+              ) : (
+                <>
+                  <span>✨</span>
+                  <span className="uppercase tracking-widest">{currentMood.replace('-', ' ')} SESSION</span>
+                </>
+              )}
+            </motion.div>
           </div>
 
           {/* Board */}
@@ -107,12 +140,13 @@ function GameContent() {
 
         {/* AI Coach sidebar — hidden on mobile */}
         <motion.aside
-          className="hidden lg:flex flex-col"
+          className="hidden lg:flex flex-col gap-4"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <AICoach />
+          <MoodMechanicsInfo />
         </motion.aside>
       </div>
     </div>

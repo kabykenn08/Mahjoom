@@ -17,6 +17,7 @@ export default function GameControls() {
   const { playSound } = useSound();
 
   const handleHint = () => {
+    if (!theme.mechanics.allowHints) return;
     playSound('hint', 0.5);
     const hint = useHint();
     if (hint && (window as any).__setHint) {
@@ -25,7 +26,8 @@ export default function GameControls() {
   };
 
   const handleUndo = () => {
-    playSound('shuffle', 0.4); // Using shuffle sound for undo as it fits the "restoration" feel
+    if (!theme.mechanics.allowUndo) return;
+    playSound('shuffle', 0.4);
     undoLastMove();
   };
 
@@ -45,17 +47,17 @@ export default function GameControls() {
       id: 'undo',
       icon: '↩',
       label: 'Undo',
-      tooltip: 'Undo last move',
+      tooltip: theme.mechanics.allowUndo ? 'Undo last move' : 'Undo disabled in this mood',
       action: handleUndo,
-      disabled: undoStack.length === 0,
+      disabled: undoStack.length === 0 || !theme.mechanics.allowUndo,
     },
     {
       id: 'hint',
       icon: '💡',
       label: 'Hint',
-      tooltip: 'Highlight a valid pair',
+      tooltip: theme.mechanics.allowHints ? 'Highlight a valid pair' : 'Hints disabled in this mood',
       action: handleHint,
-      disabled: status !== 'playing',
+      disabled: status !== 'playing' || !theme.mechanics.allowHints,
     },
     {
       id: 'reshuffle',

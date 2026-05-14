@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
 import { useMoodStore } from '@/store/moodStore';
-import { getLayerDistribution } from '@/core/mahjong/rules';
+import { getLayerDistribution, isTileFree } from '@/core/mahjong/rules';
 import { AIGameContext } from '@/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -43,6 +43,10 @@ export default function AICoach() {
       layerDistribution: getLayerDistribution(board.tiles),
       mood: currentMood,
       moveEfficiency: stats.efficiency,
+      visibleTiles: board.tiles
+        .filter(t => !t.isRemoved && isTileFree(t, board.tiles))
+        .map(t => ({ label: t.face.label, layer: t.position.layer }))
+        .slice(0, 15), // Top 15 free tiles for context
     };
 
     setIsThinking(true);
@@ -89,17 +93,12 @@ export default function AICoach() {
     }
   }, [board, status, moves, elapsed, hintsUsed, currentMood, getStats]);
 
-  // Trigger insight every 8 moves
+  // Trigger insight every 15 moves
   useEffect(() => {
-    if (moves.length > 0 && moves.length % 8 === 0 && moves.length !== lastMoveCount.current) {
+    if (moves.length > 0 && moves.length % 15 === 0 && moves.length !== lastMoveCount.current) {
       lastMoveCount.current = moves.length;
       fetchInsight();
     }
-  }, [moves.length, fetchInsight]);
-
-  // First insight after 5 moves
-  useEffect(() => {
-    if (moves.length === 5) fetchInsight();
   }, [moves.length, fetchInsight]);
 
   // Auto-scroll to bottom
