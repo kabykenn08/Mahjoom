@@ -21,6 +21,7 @@ import AICoach from '@/components/game/AICoach';
 import MoodMechanicsInfo from '@/components/game/MoodMechanicsInfo';
 import ResultsOverlay from '@/components/game/ResultsOverlay';
 import AmbientBackground from '@/components/effects/AmbientBackground';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 
 function GameContent() {
   const searchParams = useSearchParams();
@@ -48,7 +49,9 @@ function GameContent() {
       return;
     }
 
-    if (isAuthenticated && (!board || status === 'idle' || status === 'won' || status === 'lost')) {
+    // Only auto-start if we have NO game at all (idle)
+    // If the status is 'won' or 'lost', we wait for the user to click "Play Again"
+    if (isAuthenticated && (!board || status === 'idle')) {
       startNewGame();
     }
   }, [authLoading, isAuthenticated, board, status, startNewGame, router]);
@@ -207,11 +210,7 @@ function GameContent() {
 
 export default function GamePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-dvh flex items-center justify-center">
-        <div className="text-2xl animate-pulse">🀄</div>
-      </div>
-    }>
+    <Suspense fallback={<LoadingScreen message="Preparing Board..." />}>
       <GameContent />
     </Suspense>
   );

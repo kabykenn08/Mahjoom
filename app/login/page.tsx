@@ -32,22 +32,42 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        // STRICT SIGN UP
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
+          options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
         });
-        if (error) throw error;
-        setError('Check your email to confirm registration.');
+        
+        if (signUpError) {
+          if (signUpError.message.includes('User already registered')) {
+            setError('Этот аккаунт уже создан. Просто войдите в него.');
+            setIsSignUp(false);
+          } else {
+            throw signUpError;
+          }
+        } else {
+          // Success - clear fields or show specific success state
+          setError('Аккаунт успешно создан! Теперь введите данные для входа.');
+          setIsSignUp(false);
+          setPassword(''); // Clear password for security and clarity
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        // STRICT LOGIN
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (error) throw error;
-        router.push('/profile');
+        
+        if (signInError) {
+          if (signInError.message.includes('Invalid login credentials')) {
+            setError('Неверный пароль или аккаунт еще не подтвержден. Проверьте почту, если вы только что создали его.');
+          } else {
+            throw signInError;
+          }
+        } else {
+          router.push('/profile');
+        }
       }
     } catch (err: any) {
       setError(err.message);
@@ -121,8 +141,11 @@ export default function LoginPage() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="text-xs text-center px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20"
-                  style={{ color: '#f87171' }}
+                  className={`text-xs text-center px-4 py-3 rounded-xl border transition-colors ${
+                    error.includes('успешно') || error.includes('уже создан')
+                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                      : 'bg-red-500/10 border-red-500/20 text-red-400'
+                  }`}
                 >
                   {error}
                 </motion.div>

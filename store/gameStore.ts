@@ -27,6 +27,7 @@ interface GameStore extends GameState {
   pauseGame: () => void;
   resumeGame: () => void;
   resetGame: () => void;
+  finishGame: (won: boolean) => void;
   incrementElapsed: () => void;
 
   // Computed helpers

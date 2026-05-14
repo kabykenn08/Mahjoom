@@ -56,18 +56,32 @@ export default function ResultsOverlay({ onPlayAgain }: Props) {
       setIsStreaming(true);
       setReflection('');
 
-      // Save run to database
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        saveGameRun({
-          userId: user?.id,
-          boardSeed: board.seed,
-          mood: currentMood,
-          duration: elapsed,
-          moves: moves.length,
-          hintsUsed: hintsUsed,
-          won: won,
-        });
-      });
+      // 1. Calculate score immediately
+      const calculatedScore = won 
+        ? Math.max(100, (moves.length * 100) - (elapsed * 5)) 
+        : Math.max(10, (moves.length * 20));
+
+      // 2. Perform Save
+      const performSave = async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          await saveGameRun({
+            userId: user?.id || 'guest',
+            boardSeed: board.seed,
+            mood: currentMood,
+            duration: elapsed,
+            moves: moves.length,
+            hintsUsed: hintsUsed,
+            won: won,
+            score: calculatedScore
+          });
+        } catch (err) {
+          // Silent fail
+        }
+      };
+
+      performSave();
 
       try {
 

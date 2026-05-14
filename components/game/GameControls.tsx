@@ -75,6 +75,17 @@ export default function GameControls() {
       action: handlePause,
       disabled: status !== 'playing' && status !== 'paused',
     },
+    {
+      id: 'finish',
+      icon: '🏁',
+      label: 'Finish',
+      tooltip: 'End session and save results',
+      action: () => {
+        playSound('click', 0.5);
+        useGameStore.getState().finishGame(false);
+      },
+      disabled: status !== 'playing',
+    },
   ];
 
   return (

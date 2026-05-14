@@ -11,6 +11,7 @@ import AmbientBackground from '@/components/effects/AmbientBackground';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import DynamicIcon from '@/components/ui/DynamicIcon';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 import { 
   Target, Waves, Zap, Leaf, Sparkles, Moon, 
   Trophy, Zap as Speed, Brain, Flame, Info, LogOut
@@ -49,23 +50,21 @@ export default function ProfilePage() {
   useEffect(() => {
     async function loadStats() {
       if (user?.id) {
-        const data = await getUserStats(user.id);
-        setStats(data);
-        setIsLoading(false);
+        try {
+          const data = await getUserStats(user.id);
+          setStats(data);
+        } catch (err) {
+          // Silent fail for production
+        } finally {
+          setIsLoading(false);
+        }
       }
     }
     if (isAuthenticated) loadStats();
   }, [user, isAuthenticated]);
 
   if (authLoading || isLoading || !isAuthenticated) {
-    return (
-      <div className="min-h-dvh flex items-center justify-center bg-[#020205]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="text-4xl animate-bounce">🀄</div>
-          <p className="text-xs uppercase tracking-widest text-white/40 font-bold">Synchronizing...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Accessing Sanctuary..." />;
   }
 
   // Calculate top mood for Archetype
@@ -74,10 +73,10 @@ export default function ProfilePage() {
   const totalMoods = Object.values(stats.moodCounts).reduce((a: any, b: any) => a + b, 0) as number;
 
   const displayStats = [
+    { label: 'Total Score', value: stats.totalScore?.toLocaleString() || 0 },
     { label: 'Games Played', value: stats.totalPlayed },
     { label: 'Win Rate', value: `${stats.winRate}%` },
     { label: 'Best Time', value: formatTime(stats.bestTime) },
-    { label: 'Total Hints', value: stats.totalHints },
     { label: 'Recent Streak', value: stats.recentRuns.filter((r: any) => r.won).length },
     { label: 'Level', value: Math.floor(stats.totalPlayed / 5) + 1 },
   ];

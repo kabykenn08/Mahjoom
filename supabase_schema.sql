@@ -1,5 +1,6 @@
 -- ============================================
 -- Mahjoom — Database Schema (Supabase)
+-- Optimized for Global Rankings & Persistent Profiles
 -- ============================================
 
 -- 1. Users Table (Extension of Auth)
@@ -10,6 +11,9 @@ create table if not exists public.users (
   country text,
   city text,
   archetype text,
+  total_score bigint default 0,
+  games_played integer default 0,
+  best_time integer, -- best duration for a win
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -22,62 +26,64 @@ create table if not exists public.runs (
   duration integer not null, -- in seconds
   moves integer not null,
   hints_used integer default 0,
+  score integer not null default 0,
   won boolean not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 3. Leaderboard Table
+-- 3. Global Leaderboard Table
+-- This stores the BEST record for each user to keep rankings clean
 create table if not exists public.leaderboard (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references public.users on delete cascade not null,
-  score integer not null,
-  time integer not null, -- duration in seconds
+  user_id uuid references public.users on delete cascade primary key,
+  username text not null,
+  score bigint not null,
+  time integer not null,
   country text,
   city text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 4. Function: Update Leaderboard on Win
--- This is called whenever a new run is inserted
-create or replace function public.update_leaderboard_on_win()
+-- 4. Function: Process Game Run & Update Stats/Leaderboard
+create or replace function public.process_game_run()
 returns trigger as $$
 declare
-  user_country text;
-  user_city text;
-  current_best_score integer;
+  u_username text;
+  u_country text;
+  u_city text;
 begin
-  -- Only process won games
-  if new.won = true then
-    -- Get user location
-    select country, city into user_country, user_city from public.users where id = new.user_id;
+  -- 1. Update User Global Stats
+  update public.users
+  set 
+    total_score = total_score + new.score,
+    games_played = games_played + 1,
+    best_time = case 
+      when new.won = true and (best_time is null or new.duration < best_time) then new.duration 
+      else best_time 
+    end
+  where id = new.user_id;
 
-    -- Calculate score (example: base 10000 - time penalty + move bonus)
-    -- This can be adjusted to match your game's scoring logic
-    -- For now, let's assume score is passed or calculated here
-    -- Let's use a simple formula for the leaderboard: (Moves * 10) - (Duration)
-    -- Actually, let's just use the score if we add a score column to runs
-    
-    -- Check if user already has a better score
-    select max(score) into current_best_score from public.leaderboard where user_id = new.user_id;
+  -- 2. Update Leaderboard (Store only the best score per user)
+  if new.user_id is not null then
+    select username, country, city into u_username, u_country, u_city 
+    from public.users where id = new.user_id;
 
-    if current_best_score is null or (new.moves * 50) > current_best_score then
-      -- Insert or update
-      insert into public.leaderboard (user_id, score, time, country, city)
-      values (new.user_id, (new.moves * 50), new.duration, user_country, user_city)
-      on conflict (id) do update set 
-        score = excluded.score,
-        time = excluded.time;
-    end if;
+    insert into public.leaderboard (user_id, username, score, time, country, city, updated_at)
+    values (new.user_id, u_username, new.score, new.duration, u_country, u_city, now())
+    on conflict (user_id) do update set
+      score = case when excluded.score > public.leaderboard.score then excluded.score else public.leaderboard.score end,
+      time = case when excluded.score > public.leaderboard.score then excluded.time else public.leaderboard.time end,
+      updated_at = now();
   end if;
+
   return new;
 end;
 $$ language plpgsql security definer;
 
--- Trigger for leaderboard
+-- Trigger for runs
 drop trigger if exists on_run_inserted on public.runs;
 create trigger on_run_inserted
   after insert on public.runs
-  for each row execute procedure public.update_leaderboard_on_win();
+  for each row execute procedure public.process_game_run();
 
 -- 5. Daily Challenges Table
 create table if not exists public.daily_challenges (
@@ -94,7 +100,7 @@ alter table public.runs enable row level security;
 alter table public.leaderboard enable row level security;
 alter table public.daily_challenges enable row level security;
 
--- Policies (Safe re-run)
+-- Policies
 do $$ 
 begin
   drop policy if exists "Public profiles are viewable by everyone." on public.users;
@@ -112,7 +118,7 @@ create policy "Users can insert their own runs." on public.runs for insert with 
 create policy "Leaderboard is viewable by everyone." on public.leaderboard for select using (true);
 create policy "Daily challenges are viewable by everyone." on public.daily_challenges for select using (true);
 
--- 7. Triggers for User Profiles
+-- 7. Trigger for User Profiles
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
