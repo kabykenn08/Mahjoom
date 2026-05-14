@@ -4,10 +4,11 @@ import { motion } from 'framer-motion';
 import { useMoodStore } from '@/store/moodStore';
 import AmbientBackground from '@/components/effects/AmbientBackground';
 import FloatingTiles from '@/components/effects/FloatingTiles';
+import { MoodType } from '@/types';
 
 interface LoadingScreenProps {
   message?: string;
-  mood?: string;
+  mood?: MoodType;
 }
 
 export default function LoadingScreen({ 
